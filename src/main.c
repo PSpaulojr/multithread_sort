@@ -10,14 +10,16 @@
 int vetor_numeros[NMAX];
 int parte = 0;
 int qntd_numeros = 0;
+int abrir_threads = 0;
 //int MAX = 0;
-
+pthread_mutex_t trava;
 
 
 void merge(int l, int m, int r);
 void mergeSort(int l, int r);
 void printvetor_numeros(int size);
 void* funcao_thread(void *arg);
+void print_parcial(int l, int r);
 
 int main() {
   
@@ -40,29 +42,38 @@ int main() {
 
   pthread_t threads[N_THREADS];
 
+  if(qntd_numeros < 16){
+    abrir_threads = 2;
+  }
+  else{
+    abrir_threads = N_THREADS;
+  }
+
 /* Inicializo minhas threads */
-  for (int i = 0; i < N_THREADS ; i++) {
+  for (int i = 0; i < abrir_threads ; i++) {
     //thread_args[i] = i;
     pthread_create(&(threads[i]), NULL, funcao_thread, NULL );
   }
 
 /*Espero minha threads finalizarem */
-  for (int i = 0; i < N_THREADS; i++) {
+  for (int i = 0; i < abrir_threads; i++) {
     pthread_join(threads[i], NULL);
   }
 
   printf("\nSeparados:\n");
   printvetor_numeros(qntd_numeros);
 
+  printf("\nm primeira metade: %d\n",(( (qntd_numeros/2) - 1 ) / 2) );
   merge(0, ( (qntd_numeros/2) - 1 ) / 2 , (qntd_numeros / 2) -1 ) ;
   printf("Primeira metade sort:\n");
   printvetor_numeros(qntd_numeros);
 
-  merge(qntd_numeros/2, (qntd_numeros)/2 + ( ( qntd_numeros - ( qntd_numeros/2 ) ) / 2 ) , (qntd_numeros)-1 );
+  printf("\nm segunda metade: %d\n\n", ( ((qntd_numeros/2)-1) + ( (qntd_numeros - ( qntd_numeros/2 )) / 2 )));
+  merge(qntd_numeros/2, ( ((qntd_numeros/2)-1) + ( (qntd_numeros - ( qntd_numeros/2 )) / 2 ) ), (qntd_numeros)-1 );
   printf("Segunda metade sort:\n");
   printvetor_numeros(qntd_numeros);
 
-  merge(0, qntd_numeros/2, qntd_numeros - 1);
+  merge(0, (qntd_numeros)/2,qntd_numeros - 1);
   printf("Os dois sort:\n");
   printvetor_numeros(qntd_numeros);
   printf("\n");
@@ -74,7 +85,8 @@ int main() {
 }
 
 void merge(int l, int m, int r){
-    
+    //printf("\nMerge:\n");
+
     int i, j, k;
 
 
@@ -99,10 +111,14 @@ void merge(int l, int m, int r){
         if (L[i] <= R[j]){
             vetor_numeros[k] = L[i];
             i++;
+            //printvetor_numeros(qntd_numeros);
+            //printf("\n");
         }
         else {
             vetor_numeros[k] = R[j];
             j++;
+            //printvetor_numeros(qntd_numeros);
+            //printf("\n");
         }
         k++;
     }
@@ -118,8 +134,7 @@ void merge(int l, int m, int r){
         j++;
         k++;
     }
-    //printvetor_numeros(qntd_numeros);
-    //printf("\n");
+
     return;
 }
 
@@ -131,7 +146,7 @@ void mergeSort( int l, int r){
         //printf ("m vale %d\n", m);
 
         mergeSort(l, m);
-        mergeSort(m+1, r);43 
+        mergeSort(m+1, r);
 
         
         merge(l, m, r);
@@ -142,30 +157,40 @@ void mergeSort( int l, int r){
 
 
 void* funcao_thread(void *arg) {
-  printf("THREAD\n");
   int t_parte = parte ++;
-  printf("\nT_parte: %d\n",t_parte);
+  int total, l, r;
 
+  total = qntd_numeros;
+  
+    
+  printf("TREAD %d",t_parte);
+  l = t_parte * (total/4);
+  r = (t_parte + 1) * ( total/4) - 1;
 
-  int l = t_parte * (qntd_numeros/4);
-  printf("\nleft thread: %d\n", l);
-  int r = (t_parte + 1) * ( qntd_numeros/4) - 1;
-  printf("right thread: %d\n\n", r);
 
   int m = l + (r-l)/2;
 
   if(l < r){
-    printf("Thread fazendo merging:\n");
+    
     mergeSort(l, m);
+    printf("Metade l thread %d:\n", t_parte);
+    print_parcial(l, m);
     printf("\n");
-    printvetor_numeros(qntd_numeros);
+
+  
+    
     mergeSort(m+1, r);
+    printf("Metade r thread %d:\n", t_parte);
+    print_parcial(m+1, r);
     printf("\n");
-    printvetor_numeros(qntd_numeros);
+
+
     merge(l, m, r);
+    printf("merging metades thread %d:\n", t_parte);
     printvetor_numeros(qntd_numeros);
     printf("\n");
   }
+
 
   return 0;
 }
@@ -177,4 +202,11 @@ void printvetor_numeros(int size){
         printf("%d ", vetor_numeros[i]);
     }
     printf("\n");
+}
+
+void print_parcial(int l, int r){
+  for(int i = l; i <= r; i++){
+    printf("%d ", vetor_numeros[i]);
+  }
+  printf("\n");
 }
