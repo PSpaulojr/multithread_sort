@@ -6,7 +6,7 @@
 
 
 #define WORKERS 4  
-#define NUMEROS  10020
+#define NUMEROS  100000
 
 pthread_mutex_t trava ;
 pthread_mutex_t trava2 ;
