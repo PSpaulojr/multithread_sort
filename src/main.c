@@ -9,10 +9,9 @@
 #define NUMEROS  100000
 
 pthread_mutex_t trava ;
-pthread_mutex_t trava2 ;
 
 /* Definicao do problema */
-//int NUMEROS = 10100;
+
 int qntd_numeros = 0;
 int global = 0;
 
@@ -20,7 +19,6 @@ int completos[5] = {0, 0, 0, 0, 0};  /* Instancias ja solucionadas*/
 int vetor_numeros[NUMEROS];
 
 void merge(int l, int m, int r){
-    ////printf("\nMerge:\n");
 
     int i, j, k;
 
@@ -113,12 +111,10 @@ void* worker(void *arg) {
   int M = (*N);
 
   int t_parte = 0;
-  int primeiro = 0;
   int l, m ,r;
   int total = qntd_numeros;
 
 
-  //printf("Iniciando thread %d\n", M);
 
   int instancia = 0; /* A instancia do problema com a qual vou trabalhar */
 
@@ -127,10 +123,8 @@ void* worker(void *arg) {
     pthread_mutex_lock(&trava);
 
     while ( (completos[instancia]!=0) ) {
-      //printf("Thread %d testou instancia %d\n", M, instancia);
       instancia++;
     }
-    //printf("Thread %d tentando tomar instancia %d\n", M, instancia);
     if (instancia > 4) { /* Acabaram as instancias (problema inteiro
                                     foi finalizado) */
       /* Antes de sair do loop, libero a trava! */
@@ -141,41 +135,25 @@ void* worker(void *arg) {
                                  instancia que encontrei */
     pthread_mutex_unlock(&trava);
 
-    //printf("Instancia %d acessada por thread %d\n", instancia, M);
-    
     pthread_mutex_lock(&trava);
     t_parte = global;
     global ++;
-    //printf("Global: %d, t_parte: %d\n", global, t_parte);
     pthread_mutex_unlock(&trava);
 
     if( instancia == 4 ){
         l = 3 * (total/4);
-        //printf("\nl thread''%d: %d\n", M, l);
         r = total - 1;
-        //printf("\nr thread''%d: %d\n", M, r);
     } 
     else{
-      /* if(primeiro){
-        break;
-        
-         l = (t_parte+global)*(total/4);
-        //printf("\nl thread (pri)%d: %d\n", t_parte, l);
-        r = (t_parte+global+1) * (total/4) - 1  ;
-        //printf("\nr thread (pri)%d: %d\n", t_parte, r); 
-    }  */
+
         if(qntd_numeros < 16){
           l = t_parte * (total/2);
-          //printf("\nl thread %d: %d\n", M, l);
           r = (t_parte + 1) * (total/2) - 1;
-          //printf("\nr thread %d: %d\n", M, r);
         }
         else{
             if(r < qntd_numeros){
             l = t_parte * (total/4);
-            //printf("\nl thread %d: %d\n", M, l);
             r = (t_parte + 1) * (total/4) - 1;
-            //printf("\nr thread %d: %d\n", M, r);
 
           }
           else {
@@ -185,39 +163,23 @@ void* worker(void *arg) {
 
     }
 
-    
-
-
     if( (l < r) && (r < (qntd_numeros)) ){
         
         m = l + ((r-l)/2);
         
         mergeSort(l, m);
-        //printf("Metade l thread %d:\n", M);
-        //print_parcial(l, m);
-        //printf("\n");
-
     
-        
         mergeSort(m+1, r);
-        //printf("Metade r thread %d:\n", M);
-        //print_parcial(m+1, r);
-        //printf("\n");
-
 
         merge(l, m, r);
-        //printf("merging metades thread %d:\n", M);
-        //print_parcial(l,r);
-        //printf("\n");
     }
+
     else if(r == l){
       return NULL;
     }
-
-    /*resultados[instancia] = fibo(numeros[instancia]);
-    //printf("Fibo(%d) = %d\n", numeros[instancia], resultados[instancia]);*/
+    
   }
-  //printf("Saindo de thread %d\n", M);
+
   return NULL;
 }
 
@@ -234,10 +196,6 @@ int main(int argc, char **argv) {
   while(scanf("%d ", &vetor_numeros[qntd_numeros]) != EOF ){  //Conto quantos numeros que precisaram ser analisados//
     qntd_numeros++;
   }
-  //printf("Qntd de numeros: %d\n\n", qntd_numeros);
-  //printf("Original: \n");
-  //printvetor_numeros(qntd_numeros);
-  //printf("\n\n");
 
 
   if(qntd_numeros % 4 == 0){
@@ -259,27 +217,13 @@ int main(int argc, char **argv) {
   }
 
   /* Escrevendo vetor */
-  
-
-  //printf("\nSeparados:\n");
-  //printvetor_numeros(qntd_numeros);
-
-  //printf("\nm primeira metade: %d\n",(( (qntd_numeros/2) - 1 ) / 2) );
   merge(0, ( (qntd_numeros/2) - 1 ) / 2 , (qntd_numeros / 2) -1 ) ;
-  //printf("Primeira metade sort:\n");
-  //printvetor_numeros(qntd_numeros);
 
-  //printf("\nm segunda metade: %d\n\n", ( ((qntd_numeros/2)-1) + ( (qntd_numeros - ( qntd_numeros/2 )) / 2 )));
   merge(qntd_numeros/2, ( ((qntd_numeros/2)-1) + ( (qntd_numeros - ( qntd_numeros/2 )) / 2 ) ), (qntd_numeros)-1 );
-  //printf("Segunda metade sort:\n");
-  //printvetor_numeros(qntd_numeros);
+
 
   merge(0, ((qntd_numeros / 2) -1 ), qntd_numeros - 1);
-  //printf("Os dois sort:\n");
-  //printvetor_numeros(qntd_numeros);
-  //printf("\n");
 
-  //printf("Final: \n");
   printvetor_numeros(qntd_numeros);
 
   return 0;
